@@ -261,8 +261,35 @@ function parseCSV(text){
   }).filter(p=>p.sku&&p.disponible==="SI");
 }
 async function loadProducts(){
-  if(SHEET_CSV_URL){try{const res=await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(SHEET_CSV_URL)}`);const json=await res.json();const parsed=parseCSV(json.contents);if(parsed.length>0){PRODUCTS=parsed;return;}}catch(e){console.warn("Sheet no disponible:",e.message);}}
+  if(SHEET_CSV_URL){
+    // Método 1: fetch directo (funciona cuando el Sheet es público)
+    try{
+      const res=await fetch(SHEET_CSV_URL,{cache:"no-store"});
+      if(res.ok){
+        const text=await res.text();
+        const parsed=parseCSV(text);
+        if(parsed.length>0){PRODUCTS=parsed;console.log("✅ Sheets directo:",parsed.length,"productos");return;}
+      }
+    }catch(e){console.warn("Método directo falló:",e.message);}
+    // Método 2: proxy allorigins
+    try{
+      const res=await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(SHEET_CSV_URL)}&timestamp=${Date.now()}`);
+      const json=await res.json();
+      const parsed=parseCSV(json.contents);
+      if(parsed.length>0){PRODUCTS=parsed;console.log("✅ allorigins:",parsed.length,"productos");return;}
+    }catch(e){console.warn("allorigins falló:",e.message);}
+    // Método 3: proxy corsproxy.io
+    try{
+      const res=await fetch(`https://corsproxy.io/?${encodeURIComponent(SHEET_CSV_URL)}`);
+      if(res.ok){
+        const text=await res.text();
+        const parsed=parseCSV(text);
+        if(parsed.length>0){PRODUCTS=parsed;console.log("✅ corsproxy:",parsed.length,"productos");return;}
+      }
+    }catch(e){console.warn("corsproxy falló:",e.message);}
+  }
   PRODUCTS=FALLBACK_PRODUCTS.filter(p=>p.disponible==="SI");
+  console.warn("⚠️ Usando datos locales:",PRODUCTS.length,"productos");
 }
 function getFiltered(){return PRODUCTS.filter(p=>{const mc=activeFilter==="Todos"||p.cat===activeFilter;const q=searchTerm.toLowerCase().trim();const ms=!q||p.name.toLowerCase().includes(q)||p.brand.toLowerCase().includes(q)||p.sku.toLowerCase().includes(q)||p.cat.toLowerCase().includes(q)||p.pres.toLowerCase().includes(q);return mc&&ms;});}
 function renderFilters(){const cats=["Todos",...[...new Set(PRODUCTS.map(p=>p.cat))]];document.getElementById("filters").innerHTML=cats.map(c=>`<button class="filter-btn${c===activeFilter?" active":""}" onclick="setFilter('${c}')">${c}${c!=="Todos"?` <span style="opacity:.5;font-size:10px">(${PRODUCTS.filter(p=>p.cat===c).length})</span>`:""}</button>`).join("");}
