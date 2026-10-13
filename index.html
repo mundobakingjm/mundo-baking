@@ -301,7 +301,21 @@ function renderGrid(){
   if(!list.length){grid.innerHTML='<div class="empty"><div class="empty-icon">🔍</div><h3>Sin resultados</h3><p>Intenta con otro término</p></div>';return;}
   grid.innerHTML=list.map(p=>{
     const ic=!!cart[p.sku],cc=catCls(p.cat),px=p.sku.split("-")[0];
-    const img=p.imagen?`<img src="${p.imagen}" alt="${p.name}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`+`<div class="img-placeholder ${cc}" style="display:none"><div class="sku-code">${px}</div><div class="sku-num">${p.sku}</div></div>`:`<div class="img-placeholder ${cc}"><div class="sku-code">${px}</div><div class="sku-num">${p.sku}</div></div>`;
+    // Normalizar URL de Cloudinary: quitar extensión y añadir f_auto,q_auto
+function normalizeImgUrl(url){
+  if(!url) return '';
+  // Si es URL de Cloudinary, optimizar automáticamente
+  if(url.includes('cloudinary.com')){
+    // Quitar extensión (.jpg, .png, .webp, etc)
+    url = url.replace(/\.(jpg|jpeg|png|webp|gif)$/i,'');
+    // Insertar transformaciones si no las tiene
+    if(!url.includes('/upload/f_auto')){
+      url = url.replace('/upload/','/upload/f_auto,q_auto,c_fill,w_400,h_400/');
+    }
+  }
+  return url;
+}
+const img=p.imagen?`<img src="${normalizeImgUrl(p.imagen)}" alt="${p.name}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`+`<div class="img-placeholder ${cc}" style="display:none"><div class="sku-code">${px}</div><div class="sku-num">${p.sku}</div></div>`:`<div class="img-placeholder ${cc}"><div class="sku-code">${px}</div><div class="sku-num">${p.sku}</div></div>`;
     return`<article class="pcard${ic?" in-cart":""}" id="card-${p.sku}"><div class="img-wrap ${cc}">${img}<div class="cat-tag">${p.cat}</div><button class="add-quick" onclick="quickAdd(event,'${p.sku}')">+</button></div><div class="pcard-body"><div class="pcard-name">${p.name}</div><div class="pcard-pres">${p.pres}</div><div class="price-detal">${fmt(p.precio)}</div></div><div class="in-cart-pill">En pedido</div></article>`;
   }).join("");
 }
