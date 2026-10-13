@@ -77,9 +77,9 @@ body{font-family:"DM Sans",sans-serif;background:var(--vainilla-lt);color:var(--
 .pcard{background:var(--chantilly);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;cursor:pointer;transition:transform .22s,box-shadow .22s,border-color .18s;position:relative}
 .pcard:hover{transform:translateY(-3px);box-shadow:0 10px 32px rgba(61,95,90,.12);border-color:var(--menta2)}
 .pcard.in-cart{border-color:var(--menta2);box-shadow:0 0 0 2px rgba(138,167,162,.22)}
-.img-wrap{aspect-ratio:1;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
-.img-wrap img{width:100%;height:100%;object-fit:cover}
-.img-placeholder{display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;height:100%;gap:5px}
+.img-wrap{aspect-ratio:1;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;background:var(--vainilla-lt)}
+.img-wrap img{width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0;display:block}
+.img-placeholder{display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;height:100%;gap:5px;position:absolute;top:0;left:0}
 .sku-code{font-family:"Playfair Display",serif;font-size:26px;font-weight:700;opacity:.38}
 .sku-num{font-size:10px;font-weight:500;opacity:.28;letter-spacing:1px}
 .c-margarinas{background:#e8f3ee;color:#3d6e54}
@@ -301,8 +301,8 @@ function renderGrid(){
   if(!list.length){grid.innerHTML='<div class="empty"><div class="empty-icon">🔍</div><h3>Sin resultados</h3><p>Intenta con otro término</p></div>';return;}
   grid.innerHTML=list.map(p=>{
     const ic=!!cart[p.sku],cc=catCls(p.cat),px=p.sku.split("-")[0];
-    const img=p.imagen?`<img src="${p.imagen}" alt="${p.name}" loading="lazy">`:`<div class="img-placeholder ${cc}"><div class="sku-code">${px}</div><div class="sku-num">${p.sku}</div></div>`;
-    return`<article class="pcard${ic?" in-cart":""}" id="card-${p.sku}"><div class="img-wrap${!p.imagen?" "+cc:""}">${img}<div class="cat-tag">${p.cat}</div><button class="add-quick" onclick="quickAdd(event,'${p.sku}')">+</button></div><div class="pcard-body"><div class="pcard-name">${p.name}</div><div class="pcard-pres">${p.pres}</div><div class="price-detal">${fmt(p.precio)}</div></div><div class="in-cart-pill">En pedido</div></article>`;
+    const img=p.imagen?`<img src="${p.imagen}" alt="${p.name}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`+`<div class="img-placeholder ${cc}" style="display:none"><div class="sku-code">${px}</div><div class="sku-num">${p.sku}</div></div>`:`<div class="img-placeholder ${cc}"><div class="sku-code">${px}</div><div class="sku-num">${p.sku}</div></div>`;
+    return`<article class="pcard${ic?" in-cart":""}" id="card-${p.sku}"><div class="img-wrap ${cc}">${img}<div class="cat-tag">${p.cat}</div><button class="add-quick" onclick="quickAdd(event,'${p.sku}')">+</button></div><div class="pcard-body"><div class="pcard-name">${p.name}</div><div class="pcard-pres">${p.pres}</div><div class="price-detal">${fmt(p.precio)}</div></div><div class="in-cart-pill">En pedido</div></article>`;
   }).join("");
 }
 function quickAdd(e,sku){e.stopPropagation();const p=PRODUCTS.find(x=>x.sku===sku);if(!p)return;if(!cart[sku])cart[sku]={...p,qty:1};else cart[sku].qty++;document.getElementById("card-"+sku)?.classList.add("in-cart");const c=document.getElementById("cartCount");c.classList.remove("bump");void c.offsetWidth;c.classList.add("bump");updateCartUI();}
